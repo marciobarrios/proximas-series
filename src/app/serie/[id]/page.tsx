@@ -49,9 +49,9 @@ export default async function ShowDetailPage({
 
   return (
     <>
-      <Header />
-      {/* Backdrop */}
-      <div className="relative h-[280px] w-full overflow-hidden sm:h-[360px]">
+      {/* Backdrop + transparent header */}
+      <div className="relative h-[336px] w-full overflow-hidden sm:h-[416px]">
+        <Header variant="transparent" />
         {backdropUrl ? (
           <Image
             src={backdropUrl}
@@ -63,6 +63,7 @@ export default async function ShowDetailPage({
         ) : (
           <div className="h-full w-full bg-muted" />
         )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 to-transparent" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/60 to-transparent" />
       </div>
 
