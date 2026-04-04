@@ -148,7 +148,7 @@ export default async function ShowDetailPage({
                   {cast.map((member) => (
                     <div
                       key={member.id}
-                      className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5"
+                      className="flex items-center gap-2 rounded-full bg-muted py-1.5 pl-1.5 pr-3"
                     >
                       {member.profile_path ? (
                         <div className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full">
