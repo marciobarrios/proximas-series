@@ -6,6 +6,7 @@ import { tmdbImage, tmdbBackdrop, getYearRange } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { AddToWatchlistButton } from "@/components/watchlist/add-to-watchlist-button";
+import { ShowCard } from "@/components/shows/show-card";
 
 export default async function ShowDetailPage({
   params,
@@ -46,6 +47,8 @@ export default async function ShowDetailPage({
   const yearRange = getYearRange(show.first_air_date, show.last_air_date, show.status);
   const score = show.vote_average?.toFixed(1);
   const cast = show.credits?.cast?.slice(0, 8) ?? [];
+  const recommendations = show.recommendations?.results?.slice(0, 10) ?? [];
+  const similar = show.similar?.results?.slice(0, 10) ?? [];
 
   return (
     <>
@@ -190,6 +193,32 @@ export default async function ShowDetailPage({
             )}
           </div>
         </div>
+
+        {recommendations.length > 0 && (
+          <section className="mt-10">
+            <h2 className="mb-4 text-lg font-semibold">Relacionadas</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {recommendations.map((rec) => (
+                <div key={rec.id} className="w-[150px] shrink-0">
+                  <ShowCard show={rec} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {similar.length > 0 && (
+          <section className="mt-10 pb-10">
+            <h2 className="mb-4 text-lg font-semibold">Series similares</h2>
+            <div className="flex gap-4 overflow-x-auto pb-4">
+              {similar.map((s) => (
+                <div key={s.id} className="w-[150px] shrink-0">
+                  <ShowCard show={s} />
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
       </main>
     </>
   );
