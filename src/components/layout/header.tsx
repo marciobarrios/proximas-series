@@ -26,7 +26,7 @@ export function Header({
           href="/"
           className="text-lg font-bold tracking-tight transition-opacity hover:opacity-80"
         >
-          Proximas Series
+          Próximas series
         </Link>
 
         <div className="flex items-center gap-2">

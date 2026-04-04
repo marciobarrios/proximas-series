@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Proximas Series",
+  title: "Próximas series",
   description: "Tu lista de series por ver",
 };
 
