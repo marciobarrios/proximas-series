@@ -14,7 +14,7 @@ import {
   CommandItem,
 } from "@/components/ui/command";
 import { Button } from "@/components/ui/button";
-import { Search } from "lucide-react";
+import { Search, Star } from "lucide-react";
 
 export function SearchBar({ transparent }: { transparent?: boolean }) {
   const router = useRouter();
@@ -69,7 +69,7 @@ export function SearchBar({ transparent }: { transparent?: boolean }) {
           onValueChange={setQuery}
           className="text-base"
         />
-        <CommandList className="max-h-72">
+        <CommandList className="max-h-96">
           {isLoading && query.trim().length >= 2 && (
             <div className="flex items-center justify-center py-6">
               <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground/25 border-t-muted-foreground" />
@@ -80,33 +80,45 @@ export function SearchBar({ transparent }: { transparent?: boolean }) {
           )}
           {!isLoading && results.length > 0 && (
             <CommandGroup>
-              {results.slice(0, 8).map((show) => {
-                const thumb = tmdbImage(show.poster_path, "w92");
+              {results.slice(0, 6).map((show) => {
+                const thumb = tmdbImage(show.poster_path, "w154");
                 const year = getYear(show.first_air_date);
+                const score = show.vote_average?.toFixed(1);
                 return (
                   <CommandItem
                     key={show.id}
                     value={String(show.id)}
                     onSelect={() => handleSelect(show.id)}
-                    className="flex items-center gap-3 px-3 py-2"
+                    className="flex items-start gap-3 px-3 py-2.5"
                   >
                     {thumb ? (
                       <Image
                         src={thumb}
                         alt=""
-                        width={32}
-                        height={48}
-                        className="rounded object-cover"
+                        width={56}
+                        height={84}
+                        className="shrink-0 rounded object-cover"
                       />
                     ) : (
-                      <div className="h-12 w-8 rounded bg-muted" />
+                      <div className="h-[84px] w-[56px] shrink-0 rounded bg-muted" />
                     )}
                     <div className="flex-1 overflow-hidden">
                       <p className="truncate text-sm font-medium">
                         {show.name}
                       </p>
-                      {year && (
-                        <p className="text-xs text-muted-foreground">{year}</p>
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        {year && <span>{year}</span>}
+                        {score && Number(score) > 0 && (
+                          <span className="flex items-center gap-0.5">
+                            <Star className="size-3 fill-yellow-500 text-yellow-500" />
+                            {score}
+                          </span>
+                        )}
+                      </div>
+                      {show.overview && (
+                        <p className="mt-1 text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                          {show.overview}
+                        </p>
                       )}
                     </div>
                   </CommandItem>
