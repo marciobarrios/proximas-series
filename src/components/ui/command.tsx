@@ -61,7 +61,7 @@ function CommandDialog({
         )}
         showCloseButton={showCloseButton}
       >
-        <Command>
+        <Command shouldFilter={false}>
           {children}
         </Command>
       </DialogContent>

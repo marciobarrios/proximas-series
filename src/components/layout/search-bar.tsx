@@ -66,10 +66,15 @@ export function SearchBar() {
           className="text-base"
         />
         <CommandList className="max-h-72">
+          {isLoading && query.trim().length >= 2 && (
+            <div className="flex items-center justify-center py-6">
+              <div className="size-5 animate-spin rounded-full border-2 border-muted-foreground/25 border-t-muted-foreground" />
+            </div>
+          )}
           {query.trim().length >= 2 && results.length === 0 && !isLoading && (
             <CommandEmpty>No se encontraron resultados</CommandEmpty>
           )}
-          {results.length > 0 && (
+          {!isLoading && results.length > 0 && (
             <CommandGroup>
               {results.slice(0, 8).map((show) => {
                 const thumb = tmdbImage(show.poster_path, "w92");
