@@ -16,7 +16,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Search } from "lucide-react";
 
-export function SearchBar() {
+export function SearchBar({ transparent }: { transparent?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const { query, setQuery, results, isLoading } = useSearch();
@@ -42,7 +42,11 @@ export function SearchBar() {
     <>
       <Button
         variant="outline"
-        className="relative h-9 w-9 sm:w-64 sm:justify-start sm:px-3 sm:text-muted-foreground"
+        className={
+          transparent
+            ? "relative h-9 w-9 border-white/30 bg-white/10 text-white/90 hover:bg-white/20 hover:text-white sm:w-64 sm:justify-start sm:px-3"
+            : "relative h-9 w-9 sm:w-64 sm:justify-start sm:px-3 sm:text-muted-foreground"
+        }
         onClick={handleOpen}
       >
         <Search className="h-4 w-4 sm:mr-2" />
