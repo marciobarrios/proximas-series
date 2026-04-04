@@ -151,15 +151,16 @@ export default async function ShowDetailPage({
                       className="flex items-center gap-2 rounded-full bg-muted px-3 py-1.5"
                     >
                       {member.profile_path ? (
-                        <Image
-                          src={tmdbImage(member.profile_path, "w92")!}
-                          alt={member.name}
-                          width={24}
-                          height={24}
-                          className="rounded-full object-cover"
-                        />
+                        <div className="relative h-6 w-6 shrink-0 overflow-hidden rounded-full">
+                          <Image
+                            src={tmdbImage(member.profile_path, "w92")!}
+                            alt={member.name}
+                            fill
+                            className="object-cover"
+                          />
+                        </div>
                       ) : (
-                        <div className="h-6 w-6 rounded-full bg-muted-foreground/20" />
+                        <div className="h-6 w-6 shrink-0 rounded-full bg-muted-foreground/20" />
                       )}
                       <span className="text-xs">
                         <span className="font-medium">{member.name}</span>
