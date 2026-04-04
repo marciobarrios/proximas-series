@@ -29,6 +29,6 @@ export async function getTrending(): Promise<TMDBTrendingResponse> {
 
 export async function getShowDetail(id: number): Promise<TMDBShowDetail> {
   return tmdbFetch<TMDBShowDetail>(`/tv/${id}`, {
-    append_to_response: "credits",
+    append_to_response: "credits,recommendations,similar",
   });
 }

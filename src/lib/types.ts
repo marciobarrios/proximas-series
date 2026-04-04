@@ -28,6 +28,8 @@ export interface TMDBShowDetail extends Omit<TMDBShow, "genre_ids"> {
   credits?: {
     cast: TMDBCastMember[];
   };
+  recommendations?: { page: number; results: TMDBShow[] };
+  similar?: { page: number; results: TMDBShow[] };
 }
 
 export interface TMDBCastMember {
