@@ -39,10 +39,8 @@ export default async function MisSeriesPage({
     .eq("user_id", user.id)
     .order("added_at", { ascending: false });
 
-  if (filtro === "pendientes") {
-    query = query.eq("seen", false);
-  } else if (filtro === "vistas") {
-    query = query.eq("seen", true);
+  if (filtro) {
+    query = query.eq("status", filtro);
   }
 
   const { data: items } = await query;

@@ -5,8 +5,9 @@ import { cn } from "@/lib/utils";
 
 const filters = [
   { label: "Todas", value: undefined },
-  { label: "Pendientes", value: "pendientes" },
-  { label: "Vistas", value: "vistas" },
+  { label: "Pendientes", value: "pending" },
+  { label: "Viendo", value: "watching" },
+  { label: "Vistas", value: "seen" },
 ] as const;
 
 export function WatchlistFilters({ current }: { current?: string }) {
