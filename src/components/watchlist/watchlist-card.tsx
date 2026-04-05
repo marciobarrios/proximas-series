@@ -7,6 +7,11 @@ import { updateStatus, removeFromWatchlist } from "@/app/actions/watchlist";
 import { tmdbImage, getYear } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { Clock, Play, Eye, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WatchlistItem, WatchlistStatus } from "@/lib/types";
@@ -78,38 +83,58 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
         )}
       </Link>
 
-      <div className="px-1 pt-2 pb-1">
+      <div className="px-2 pt-2 pb-1">
         <h3 className="text-sm font-medium leading-tight line-clamp-2">
           {item.title}
         </h3>
-        {year && (
-          <p className="mt-0.5 text-xs text-muted-foreground">{year}</p>
+        {(year || item.number_of_seasons) && (
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {[
+              year,
+              item.number_of_seasons &&
+                `${item.number_of_seasons} temp.`,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
         )}
       </div>
 
       <div className="flex gap-1 px-1 pb-2">
         {statusOptions.map(({ status, icon: Icon, label }) => (
-          <Button
-            key={status}
-            onClick={() => handleStatusChange(status)}
-            disabled={isPending}
-            variant={optimisticStatus === status ? "secondary" : "ghost"}
-            size="xs"
-            className="flex-1"
-          >
-            <Icon className="h-3 w-3" />
-            {label}
-          </Button>
+          <Tooltip key={status}>
+            <TooltipTrigger
+              render={
+                <Button
+                  onClick={() => handleStatusChange(status)}
+                  disabled={isPending}
+                  variant={optimisticStatus === status ? "secondary" : "ghost"}
+                  size="xs"
+                  className="flex-1"
+                />
+              }
+            >
+              <Icon className="h-3 w-3" />
+            </TooltipTrigger>
+            <TooltipContent>{label}</TooltipContent>
+          </Tooltip>
         ))}
-        <Button
-          onClick={handleRemove}
-          disabled={isPending}
-          variant="ghost"
-          size="xs"
-          className="w-6 p-0 text-destructive hover:text-destructive"
-        >
-          <Trash2 className="h-3 w-3" />
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                onClick={handleRemove}
+                disabled={isPending}
+                variant="ghost"
+                size="xs"
+                className="w-6 p-0 text-destructive hover:text-destructive"
+              />
+            }
+          >
+            <Trash2 className="h-3 w-3" />
+          </TooltipTrigger>
+          <TooltipContent>Eliminar</TooltipContent>
+        </Tooltip>
       </div>
     </div>
   );
