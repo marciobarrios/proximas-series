@@ -3,28 +3,34 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useOptimistic, useTransition } from "react";
-import { toggleSeen, removeFromWatchlist } from "@/app/actions/watchlist";
+import { updateStatus, removeFromWatchlist } from "@/app/actions/watchlist";
 import { tmdbImage, getYear } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Eye, EyeOff, Trash2 } from "lucide-react";
+import { Clock, Play, Eye, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { WatchlistItem } from "@/lib/types";
+import type { WatchlistItem, WatchlistStatus } from "@/lib/types";
+
+const statusOptions = [
+  { status: "pending" as const, icon: Clock, label: "Pendiente" },
+  { status: "watching" as const, icon: Play, label: "Viendo" },
+  { status: "seen" as const, icon: Eye, label: "Vista" },
+];
 
 export function WatchlistCard({ item }: { item: WatchlistItem }) {
-  const [optimisticSeen, setOptimisticSeen] = useOptimistic(item.seen);
+  const [optimisticStatus, setOptimisticStatus] = useOptimistic(item.status);
   const [isPending, startTransition] = useTransition();
 
   const posterUrl = tmdbImage(item.poster_path, "w342");
   const year = getYear(item.first_air_date);
 
-  function handleToggleSeen() {
+  function handleStatusChange(newStatus: WatchlistStatus) {
     startTransition(async () => {
-      setOptimisticSeen(!optimisticSeen);
+      setOptimisticStatus(newStatus);
       const fd = new FormData();
       fd.set("tmdb_id", String(item.tmdb_id));
-      fd.set("seen", String(item.seen));
-      await toggleSeen(fd);
+      fd.set("status", newStatus);
+      await updateStatus(fd);
     });
   }
 
@@ -40,7 +46,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
     <div
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-lg bg-card transition-opacity duration-200",
-        optimisticSeen && "opacity-60"
+        optimisticStatus === "seen" && "opacity-60"
       )}
     >
       <Link
@@ -60,9 +66,14 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
             Sin imagen
           </div>
         )}
-        {optimisticSeen && (
+        {optimisticStatus === "seen" && (
           <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground text-xs">
             Vista
+          </Badge>
+        )}
+        {optimisticStatus === "watching" && (
+          <Badge className="absolute top-2 left-2 bg-orange-500 text-white text-xs">
+            Viendo
           </Badge>
         )}
       </Link>
@@ -77,33 +88,27 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
       </div>
 
       <div className="flex gap-1 px-1 pb-2">
-        <Button
-          onClick={handleToggleSeen}
-          disabled={isPending}
-          variant="ghost"
-          size="sm"
-          className="h-8 flex-1 gap-1 text-xs"
-        >
-          {optimisticSeen ? (
-            <>
-              <EyeOff className="h-3.5 w-3.5" />
-              Pendiente
-            </>
-          ) : (
-            <>
-              <Eye className="h-3.5 w-3.5" />
-              Vista
-            </>
-          )}
-        </Button>
+        {statusOptions.map(({ status, icon: Icon, label }) => (
+          <Button
+            key={status}
+            onClick={() => handleStatusChange(status)}
+            disabled={isPending}
+            variant={optimisticStatus === status ? "secondary" : "ghost"}
+            size="xs"
+            className="flex-1"
+          >
+            <Icon className="h-3 w-3" />
+            {label}
+          </Button>
+        ))}
         <Button
           onClick={handleRemove}
           disabled={isPending}
           variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 text-destructive hover:text-destructive"
+          size="xs"
+          className="w-6 p-0 text-destructive hover:text-destructive"
         >
-          <Trash2 className="h-3.5 w-3.5" />
+          <Trash2 className="h-3 w-3" />
         </Button>
       </div>
     </div>

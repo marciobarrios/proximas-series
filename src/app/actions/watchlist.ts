@@ -79,7 +79,7 @@ export async function removeFromWatchlist(formData: FormData) {
   revalidatePath(`/serie/${tmdb_id}`);
 }
 
-export async function toggleSeen(formData: FormData) {
+export async function updateStatus(formData: FormData) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -87,13 +87,13 @@ export async function toggleSeen(formData: FormData) {
   if (!user) throw new Error("No autenticado");
 
   const tmdb_id = Number(formData.get("tmdb_id"));
-  const currentSeen = formData.get("seen") === "true";
+  const status = formData.get("status") as string;
 
   const { error } = await supabase
     .from("watchlist")
     .update({
-      seen: !currentSeen,
-      seen_at: !currentSeen ? new Date().toISOString() : null,
+      status,
+      seen_at: status === "seen" ? new Date().toISOString() : null,
     })
     .eq("user_id", user.id)
     .eq("tmdb_id", tmdb_id);

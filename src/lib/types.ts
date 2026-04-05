@@ -54,6 +54,8 @@ export interface TMDBTrendingResponse {
 
 // App types
 
+export type WatchlistStatus = "pending" | "watching" | "seen";
+
 export interface WatchlistItem {
   id: string;
   user_id: string;
@@ -64,7 +66,7 @@ export interface WatchlistItem {
   first_air_date: string | null;
   vote_average: number | null;
   number_of_seasons: number | null;
-  seen: boolean;
+  status: WatchlistStatus;
   added_at: string;
   seen_at: string | null;
 }
