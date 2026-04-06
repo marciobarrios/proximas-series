@@ -24,9 +24,10 @@ export function Header({
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
+          title="Próximas series"
           className="text-lg font-bold tracking-tight transition-opacity hover:opacity-80"
         >
-          📺 Próximas series
+          📺🍿✨
         </Link>
 
         <div className="flex items-center gap-2">
