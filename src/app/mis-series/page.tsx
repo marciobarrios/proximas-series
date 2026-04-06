@@ -50,7 +50,7 @@ export default async function MisSeriesPage({
     <>
       <Header />
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
-        <div className="mb-6 flex items-center justify-between">
+        <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-xl font-semibold tracking-tight">Mis series</h1>
           <WatchlistFilters current={filtro} />
         </div>
