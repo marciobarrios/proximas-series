@@ -1,8 +1,14 @@
+import type { Metadata } from "next";
 import { getTrending } from "@/lib/tmdb";
 import { ShowGrid } from "@/components/shows/show-grid";
 import { Header } from "@/components/layout/header";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Tendencias",
+  description: "Las series más populares de la semana",
+};
 
 export default async function Home() {
   const trending = await getTrending();

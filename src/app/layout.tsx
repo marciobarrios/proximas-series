@@ -15,8 +15,19 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Próximas series",
+  title: {
+    default: "📺 Próximas series",
+    template: "%s | Próximas series",
+  },
   description: "Tu lista de series por ver",
+  openGraph: {
+    type: "website",
+    locale: "es_ES",
+    siteName: "Próximas series",
+  },
+  twitter: {
+    card: "summary_large_image",
+  },
   icons: {
     icon: "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📺</text></svg>",
   },

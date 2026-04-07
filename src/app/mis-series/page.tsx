@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
@@ -6,6 +7,11 @@ import { EmptyWatchlist } from "@/components/watchlist/empty-watchlist";
 import { LoginButton } from "@/components/auth/login-button";
 import { WatchlistFilters } from "./watchlist-filters";
 import type { WatchlistItem } from "@/lib/types";
+
+export const metadata: Metadata = {
+  title: "Mis series",
+  description: "Tu lista personal de series por ver",
+};
 
 export default async function MisSeriesPage({
   searchParams,
