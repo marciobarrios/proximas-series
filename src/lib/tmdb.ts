@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 import { TMDB_BASE_URL } from "./constants";
 import type { TMDBSearchResponse, TMDBShowDetail, TMDBTrendingResponse } from "./types";
 
@@ -27,8 +28,8 @@ export async function getTrending(): Promise<TMDBTrendingResponse> {
   return tmdbFetch<TMDBTrendingResponse>("/trending/tv/week");
 }
 
-export async function getShowDetail(id: number): Promise<TMDBShowDetail> {
+export const getShowDetail = cache(async (id: number): Promise<TMDBShowDetail> => {
   return tmdbFetch<TMDBShowDetail>(`/tv/${id}`, {
     append_to_response: "credits,recommendations,similar",
   });
-}
+});

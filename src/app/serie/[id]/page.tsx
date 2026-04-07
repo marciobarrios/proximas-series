@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import { getShowDetail } from "@/lib/tmdb";
@@ -7,6 +8,41 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { AddToWatchlistButton } from "@/components/watchlist/add-to-watchlist-button";
 import { ShowCard } from "@/components/shows/show-card";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const numId = parseInt(id, 10);
+  if (isNaN(numId)) return {};
+
+  try {
+    const show = await getShowDetail(numId);
+    const description = show.overview
+      ? show.overview.slice(0, 160) + (show.overview.length > 160 ? "…" : "")
+      : undefined;
+
+    const images = [
+      tmdbBackdrop(show.backdrop_path, "w1280"),
+      tmdbImage(show.poster_path, "w780"),
+    ].filter(Boolean) as string[];
+
+    return {
+      title: show.name,
+      description,
+      openGraph: {
+        type: "video.tv_show",
+        title: show.name,
+        description,
+        images,
+      },
+    };
+  } catch {
+    return {};
+  }
+}
 
 export default async function ShowDetailPage({
   params,
