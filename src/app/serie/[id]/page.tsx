@@ -68,14 +68,16 @@ export default async function ShowDetailPage({
   } = await supabase.auth.getUser();
 
   let isInWatchlist = false;
+  let currentStatus: "pending" | "watching" | "seen" = "pending";
   if (user) {
     const { data } = await supabase
       .from("watchlist")
-      .select("id")
+      .select("id, status")
       .eq("user_id", user.id)
       .eq("tmdb_id", numId)
       .maybeSingle();
     isInWatchlist = !!data;
+    if (data?.status) currentStatus = data.status;
   }
 
   const posterUrl = tmdbImage(show.poster_path, "w500");
@@ -160,6 +162,7 @@ export default async function ShowDetailPage({
               show={show}
               isInWatchlist={isInWatchlist}
               isAuthenticated={!!user}
+              currentStatus={currentStatus}
             />
 
             {show.genres.length > 0 && (
