@@ -6,11 +6,10 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { List, LogOut } from "lucide-react";
+import { LogOut } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
 export function UserMenu({ user }: { user: User }) {
@@ -48,15 +47,6 @@ export function UserMenu({ user }: { user: User }) {
             </p>
           )}
         </div>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={() => router.push("/mis-series")}
-          className="flex items-center gap-2 cursor-pointer"
-        >
-          <List className="h-4 w-4" />
-          Mis series
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
         <DropdownMenuItem
           onClick={handleSignOut}
           className="flex items-center gap-2 text-destructive"
