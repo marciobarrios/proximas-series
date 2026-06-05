@@ -3,8 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
 import { WatchlistGrid } from "@/components/watchlist/watchlist-grid";
 import { EmptyWatchlist } from "@/components/watchlist/empty-watchlist";
+import { UpcomingReleases } from "@/components/watchlist/upcoming-releases";
 import { LoginButton } from "@/components/auth/login-button";
 import { WatchlistFilters } from "./watchlist-filters";
+import { getUpcomingReleases } from "@/lib/upcoming-releases";
 import type { WatchlistItem } from "@/lib/types";
 
 export const metadata: Metadata = {
@@ -38,6 +40,15 @@ export default async function MisSeriesPage({
     );
   }
 
+  const { data: allItems } = await supabase
+    .from("watchlist")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("added_at", { ascending: false });
+
+  const allWatchlist = (allItems ?? []) as WatchlistItem[];
+  const upcomingReleases = await getUpcomingReleases(allWatchlist);
+
   let query = supabase
     .from("watchlist")
     .select("*")
@@ -59,6 +70,11 @@ export default async function MisSeriesPage({
           <h1 className="text-xl font-semibold tracking-tight">Mis series</h1>
           <WatchlistFilters current={filtro} />
         </div>
+        {allWatchlist.length > 0 && (
+          <div className="mb-8">
+            <UpcomingReleases releases={upcomingReleases} />
+          </div>
+        )}
         {watchlist.length === 0 ? (
           <EmptyWatchlist />
         ) : (
