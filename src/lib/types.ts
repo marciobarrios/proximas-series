@@ -20,8 +20,12 @@ export interface TMDBShowDetail extends Omit<TMDBShow, "genre_ids"> {
   number_of_seasons: number;
   number_of_episodes: number;
   status: string;
+  in_production: boolean;
   tagline: string;
   last_air_date: string;
+  next_episode_to_air: TMDBEpisode | null;
+  last_episode_to_air: TMDBEpisode | null;
+  seasons: TMDBSeason[];
   genres: { id: number; name: string }[];
   networks: { id: number; name: string; logo_path: string | null }[];
   created_by: { id: number; name: string; profile_path: string | null }[];
@@ -30,6 +34,32 @@ export interface TMDBShowDetail extends Omit<TMDBShow, "genre_ids"> {
   };
   recommendations?: { page: number; results: TMDBShow[] };
   similar?: { page: number; results: TMDBShow[] };
+}
+
+export interface TMDBEpisode {
+  id: number;
+  name: string;
+  overview: string;
+  air_date: string | null;
+  episode_number: number;
+  episode_type?: string;
+  runtime?: number | null;
+  season_number: number;
+  show_id?: number;
+  still_path: string | null;
+  vote_average: number;
+  vote_count: number;
+}
+
+export interface TMDBSeason {
+  id: number;
+  name: string;
+  overview: string;
+  air_date: string | null;
+  episode_count: number;
+  poster_path: string | null;
+  season_number: number;
+  vote_average?: number;
 }
 
 export interface TMDBCastMember {
@@ -69,4 +99,16 @@ export interface WatchlistItem {
   status: WatchlistStatus;
   added_at: string;
   seen_at: string | null;
+}
+
+export interface UpcomingRelease {
+  tmdb_id: number;
+  title: string;
+  poster_path: string | null;
+  air_date: string;
+  episode_name: string | null;
+  season_number: number;
+  episode_number: number;
+  label: string;
+  is_season_premiere: boolean;
 }
