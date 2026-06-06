@@ -16,12 +16,16 @@ const RECENT_FINISHED_DAYS = 30;
 
 const shortDateFormatter = new Intl.DateTimeFormat("es-ES", {
   day: "numeric",
-  month: "short",
+  month: "long",
 });
 
 const fullDateFormatter = new Intl.DateTimeFormat("es-ES", {
   weekday: "long",
   day: "numeric",
+  month: "long",
+});
+
+const monthNameFormatter = new Intl.DateTimeFormat("es-ES", {
   month: "long",
 });
 
@@ -44,6 +48,15 @@ function formatDate(date: string, variant: "short" | "full" = "short") {
   return (variant === "full" ? fullDateFormatter : shortDateFormatter).format(
     parsedDate
   );
+}
+
+function formatDateTile(date: string) {
+  const parsedDate = new Date(`${date}T12:00:00`);
+
+  return {
+    day: String(parsedDate.getDate()),
+    month: monthNameFormatter.format(parsedDate),
+  };
 }
 
 function buildEpisodeLabel(episode: TMDBEpisode) {
@@ -424,16 +437,16 @@ function ReleaseCalendar({
       </div>
 
       {nextEpisode?.air_date && (
-        <div className="mt-4 grid gap-3 rounded-lg bg-primary/10 p-3 sm:grid-cols-[auto_1fr]">
+        <div className="mt-4 grid grid-cols-[auto_1fr] gap-3 rounded-lg bg-primary/10 p-3">
           <time
             dateTime={nextEpisode.air_date}
-            className="flex min-w-20 flex-col rounded-md bg-background px-3 py-2 text-center shadow-sm ring-1 ring-border"
+            className="flex min-w-20 flex-col items-center justify-center rounded-md bg-background px-3 py-2 text-center shadow-sm ring-1 ring-border"
           >
-            <span className="text-lg font-semibold leading-none">
-              {formatDate(nextEpisode.air_date)}
+            <span className="text-2xl font-semibold leading-none">
+              {formatDateTile(nextEpisode.air_date).day}
             </span>
-            <span className="mt-1 text-[11px] text-muted-foreground">
-              {nextEpisode.air_date}
+            <span className="mt-1 text-xs font-medium text-muted-foreground">
+              {formatDateTile(nextEpisode.air_date).month}
             </span>
           </time>
 
@@ -466,7 +479,7 @@ function ReleaseCalendar({
             return (
               <li
                 key={episode.id}
-                className="grid grid-cols-[4.5rem_1fr] gap-3 rounded-lg bg-muted/40 p-3"
+                className="grid grid-cols-[7rem_1fr] gap-3 rounded-lg bg-muted/40 p-3"
               >
                 <time
                   dateTime={episode.air_date}
