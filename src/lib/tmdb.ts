@@ -3,6 +3,7 @@ import { cache } from "react";
 import { TMDB_BASE_URL } from "./constants";
 import type {
   TMDBSearchResponse,
+  TMDBSeasonDetail,
   TMDBShowDetail,
   TMDBTrendingResponse,
 } from "./types";
@@ -53,6 +54,18 @@ export const getShowDetail = cache(
       {
         append_to_response: "credits,recommendations,similar",
       },
+      {
+        revalidate: SHOW_DETAIL_REVALIDATE_SECONDS,
+      }
+    );
+  }
+);
+
+export const getSeasonDetail = cache(
+  async (showId: number, seasonNumber: number): Promise<TMDBSeasonDetail> => {
+    return tmdbFetch<TMDBSeasonDetail>(
+      `/tv/${showId}/season/${seasonNumber}`,
+      {},
       {
         revalidate: SHOW_DETAIL_REVALIDATE_SECONDS,
       }

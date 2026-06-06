@@ -62,6 +62,10 @@ export interface TMDBSeason {
   vote_average?: number;
 }
 
+export interface TMDBSeasonDetail extends TMDBSeason {
+  episodes: TMDBEpisode[];
+}
+
 export interface TMDBCastMember {
   id: number;
   name: string;
