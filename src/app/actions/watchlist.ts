@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { isWatchlistStatus } from "@/lib/types";
 
 async function ensureProfile(
   supabase: Awaited<ReturnType<typeof createClient>>,
@@ -87,7 +88,8 @@ export async function updateStatus(formData: FormData) {
   if (!user) throw new Error("No autenticado");
 
   const tmdb_id = Number(formData.get("tmdb_id"));
-  const status = formData.get("status") as string;
+  const status = formData.get("status");
+  if (!isWatchlistStatus(status)) throw new Error("Estado no valido");
 
   const { error } = await supabase
     .from("watchlist")
@@ -101,4 +103,5 @@ export async function updateStatus(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/mis-series");
+  revalidatePath(`/serie/${tmdb_id}`);
 }

@@ -1,6 +1,6 @@
 # Próximas series
 
-A personal TV show tracker to browse trending shows, search the TMDB catalog, and manage a watchlist with seen/pending status.
+A personal TV show tracker to browse trending shows, search the TMDB catalog, and manage a watchlist by viewing status.
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ A personal TV show tracker to browse trending shows, search the TMDB catalog, an
 - Search shows with a command palette (⌘K)
 - View show details — genres, cast, networks, seasons, ratings
 - Add/remove shows from your personal watchlist
-- Mark shows as seen or pending with optimistic UI updates
+- Mark shows as pending, watching, waiting for the next season, or seen with optimistic UI updates
 - Filter your watchlist by status
 - OAuth authentication via Supabase
 
@@ -44,7 +44,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
 
 Create the following tables in your Supabase project:
 
-**`watchlist`** — `id`, `user_id`, `tmdb_id`, `title`, `poster_path`, `overview`, `first_air_date`, `vote_average`, `number_of_seasons`, `seen`, `added_at`, `seen_at`
+**`watchlist`** — `id`, `user_id`, `tmdb_id`, `title`, `poster_path`, `overview`, `first_air_date`, `vote_average`, `number_of_seasons`, `status` (`pending`, `watching`, `waiting`, or `seen`), `added_at`, `seen_at`
 
 **`profiles`** — `id`, `display_name`, `avatar_url`
 

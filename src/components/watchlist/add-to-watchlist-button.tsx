@@ -17,13 +17,26 @@ import {
   DropdownMenuSeparator,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
-import { Heart, Clock, Play, Eye, ChevronDown, Trash2 } from "lucide-react";
+import {
+  Heart,
+  Clock,
+  Play,
+  CalendarClock,
+  Eye,
+  ChevronDown,
+  Trash2,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { TMDBShowDetail, WatchlistStatus } from "@/lib/types";
 
 const statusOptions = [
   { status: "pending" as const, icon: Clock, label: "Pendiente" },
   { status: "watching" as const, icon: Play, label: "Viendo" },
+  {
+    status: "waiting" as const,
+    icon: CalendarClock,
+    label: "Esperando temporada",
+  },
   { status: "seen" as const, icon: Eye, label: "Vista" },
 ];
 
@@ -124,6 +137,7 @@ export function AddToWatchlistButton({
           className={cn(
             "h-4 w-4",
             optimisticStatus === "watching" && "text-orange-300",
+            optimisticStatus === "waiting" && "text-sky-300",
           )}
         />
         {activeOption.label}
