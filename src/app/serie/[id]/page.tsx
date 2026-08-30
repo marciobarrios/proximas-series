@@ -9,7 +9,13 @@ import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { AddToWatchlistButton } from "@/components/watchlist/add-to-watchlist-button";
 import { ShowCard } from "@/components/shows/show-card";
-import type { TMDBEpisode, TMDBSeasonDetail, TMDBShowDetail } from "@/lib/types";
+import {
+  isWatchlistStatus,
+  type TMDBEpisode,
+  type TMDBSeasonDetail,
+  type TMDBShowDetail,
+  type WatchlistStatus,
+} from "@/lib/types";
 
 const UPCOMING_WINDOW_DAYS = 28;
 const RECENT_FINISHED_DAYS = 30;
@@ -168,7 +174,7 @@ export default async function ShowDetailPage({
   } = await supabase.auth.getUser();
 
   let isInWatchlist = false;
-  let currentStatus: "pending" | "watching" | "seen" = "pending";
+  let currentStatus: WatchlistStatus = "pending";
   if (user) {
     const { data } = await supabase
       .from("watchlist")
@@ -177,7 +183,7 @@ export default async function ShowDetailPage({
       .eq("tmdb_id", numId)
       .maybeSingle();
     isInWatchlist = !!data;
-    if (data?.status) currentStatus = data.status;
+    if (isWatchlistStatus(data?.status)) currentStatus = data.status;
   }
 
   const posterUrl = tmdbImage(show.poster_path, "w500");

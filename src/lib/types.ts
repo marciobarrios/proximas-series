@@ -88,7 +88,21 @@ export interface TMDBTrendingResponse {
 
 // App types
 
-export type WatchlistStatus = "pending" | "watching" | "seen";
+export const WATCHLIST_STATUSES = [
+  "pending",
+  "watching",
+  "waiting",
+  "seen",
+] as const;
+
+export type WatchlistStatus = (typeof WATCHLIST_STATUSES)[number];
+
+export function isWatchlistStatus(value: unknown): value is WatchlistStatus {
+  return (
+    typeof value === "string" &&
+    WATCHLIST_STATUSES.some((status) => status === value)
+  );
+}
 
 export interface WatchlistItem {
   id: string;

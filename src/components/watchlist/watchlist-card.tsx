@@ -12,13 +12,18 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Clock, Play, Eye, Trash2 } from "lucide-react";
+import { Clock, Play, CalendarClock, Eye, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { WatchlistItem, WatchlistStatus } from "@/lib/types";
 
 const statusOptions = [
   { status: "pending" as const, icon: Clock, label: "Pendiente" },
   { status: "watching" as const, icon: Play, label: "Viendo" },
+  {
+    status: "waiting" as const,
+    icon: CalendarClock,
+    label: "Esperando temporada",
+  },
   { status: "seen" as const, icon: Eye, label: "Vista" },
 ];
 
@@ -79,6 +84,11 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
         {optimisticStatus === "watching" && (
           <Badge className="absolute top-2 left-2 bg-orange-500 text-white text-xs">
             Viendo
+          </Badge>
+        )}
+        {optimisticStatus === "waiting" && (
+          <Badge className="absolute top-2 left-2 bg-sky-600 text-white text-xs">
+            Esperando temporada
           </Badge>
         )}
       </Link>

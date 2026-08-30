@@ -7,7 +7,7 @@ import { UpcomingReleases } from "@/components/watchlist/upcoming-releases";
 import { LoginButton } from "@/components/auth/login-button";
 import { WatchlistFilters } from "./watchlist-filters";
 import { getUpcomingReleases } from "@/lib/upcoming-releases";
-import type { WatchlistItem } from "@/lib/types";
+import { isWatchlistStatus, type WatchlistItem } from "@/lib/types";
 
 export const metadata: Metadata = {
   title: "Mis series",
@@ -20,6 +20,7 @@ export default async function MisSeriesPage({
   searchParams: Promise<{ filtro?: string }>;
 }) {
   const { filtro } = await searchParams;
+  const currentFilter = isWatchlistStatus(filtro) ? filtro : undefined;
   const supabase = await createClient();
   const {
     data: { user },
@@ -55,8 +56,8 @@ export default async function MisSeriesPage({
     .eq("user_id", user.id)
     .order("added_at", { ascending: false });
 
-  if (filtro) {
-    query = query.eq("status", filtro);
+  if (currentFilter) {
+    query = query.eq("status", currentFilter);
   }
 
   const { data: items } = await query;
@@ -68,7 +69,7 @@ export default async function MisSeriesPage({
       <main className="flex-1 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-xl font-semibold tracking-tight">Mis series</h1>
-          <WatchlistFilters current={filtro} />
+          <WatchlistFilters current={currentFilter} />
         </div>
         {allWatchlist.length > 0 && (
           <div className="mb-8">
