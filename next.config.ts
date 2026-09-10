@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   htmlLimitedBots: /.*/,
   reactCompiler: true,
   images: {
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
