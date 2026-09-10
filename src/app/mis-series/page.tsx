@@ -49,19 +49,9 @@ export default async function MisSeriesPage({
 
   const allWatchlist = (allItems ?? []) as WatchlistItem[];
   const upcomingReleases = await getUpcomingReleases(allWatchlist);
-
-  let query = supabase
-    .from("watchlist")
-    .select("*")
-    .eq("user_id", user.id)
-    .order("added_at", { ascending: false });
-
-  if (currentFilter) {
-    query = query.eq("status", currentFilter);
-  }
-
-  const { data: items } = await query;
-  const watchlist = (items ?? []) as WatchlistItem[];
+  const watchlist = currentFilter
+    ? allWatchlist.filter((item) => item.status === currentFilter)
+    : allWatchlist;
 
   return (
     <>

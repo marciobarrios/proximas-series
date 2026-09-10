@@ -36,6 +36,11 @@ export interface TMDBShowDetail extends Omit<TMDBShow, "genre_ids"> {
   similar?: { page: number; results: TMDBShow[] };
 }
 
+export type TMDBShowRelease = Pick<
+  TMDBShowDetail,
+  "name" | "poster_path" | "next_episode_to_air"
+>;
+
 export interface TMDBEpisode {
   id: number;
   name: string;
