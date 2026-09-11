@@ -6,26 +6,47 @@ import { isWatchlistStatus } from "@/lib/types";
 
 async function ensureProfile(
   supabase: Awaited<ReturnType<typeof createClient>>,
-  user: { id: string; email?: string; user_metadata?: Record<string, string> }
+  profile: {
+    id: string;
+    displayName: string | null;
+    avatarUrl: string | null;
+  }
 ) {
   await supabase.from("profiles").upsert(
     {
-      id: user.id,
-      display_name: user.user_metadata?.full_name ?? user.email,
-      avatar_url: user.user_metadata?.avatar_url ?? null,
+      id: profile.id,
+      display_name: profile.displayName,
+      avatar_url: profile.avatarUrl,
     },
     { onConflict: "id" }
   );
 }
 
-export async function addToWatchlist(formData: FormData) {
+async function getAuthenticatedSupabase() {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("No autenticado");
+  const { data, error } = await supabase.auth.getClaims();
+  const claims = data?.claims;
 
-  await ensureProfile(supabase, user);
+  if (error || !claims) throw new Error("No autenticado");
+
+  return { supabase, claims };
+}
+
+export async function addToWatchlist(formData: FormData) {
+  const { supabase, claims } = await getAuthenticatedSupabase();
+  const userMetadata = claims.user_metadata;
+
+  await ensureProfile(supabase, {
+    id: claims.sub,
+    displayName:
+      typeof userMetadata?.full_name === "string"
+        ? userMetadata.full_name
+        : claims.email ?? null,
+    avatarUrl:
+      typeof userMetadata?.avatar_url === "string"
+        ? userMetadata.avatar_url
+        : null,
+  });
 
   const tmdb_id = Number(formData.get("tmdb_id"));
   const title = formData.get("title") as string;
@@ -41,7 +62,7 @@ export async function addToWatchlist(formData: FormData) {
 
   const { error } = await supabase.from("watchlist").upsert(
     {
-      user_id: user.id,
+      user_id: claims.sub,
       tmdb_id,
       title,
       poster_path,
@@ -60,18 +81,14 @@ export async function addToWatchlist(formData: FormData) {
 }
 
 export async function removeFromWatchlist(formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("No autenticado");
+  const { supabase, claims } = await getAuthenticatedSupabase();
 
   const tmdb_id = Number(formData.get("tmdb_id"));
 
   const { error } = await supabase
     .from("watchlist")
     .delete()
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .eq("tmdb_id", tmdb_id);
 
   if (error) throw new Error(error.message);
@@ -81,11 +98,7 @@ export async function removeFromWatchlist(formData: FormData) {
 }
 
 export async function updateStatus(formData: FormData) {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) throw new Error("No autenticado");
+  const { supabase, claims } = await getAuthenticatedSupabase();
 
   const tmdb_id = Number(formData.get("tmdb_id"));
   const status = formData.get("status");
@@ -97,7 +110,7 @@ export async function updateStatus(formData: FormData) {
       status,
       seen_at: status === "seen" ? new Date().toISOString() : null,
     })
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .eq("tmdb_id", tmdb_id);
 
   if (error) throw new Error(error.message);

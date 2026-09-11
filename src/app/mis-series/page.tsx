@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { getAuthClaims } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
 import { WatchlistGrid } from "@/components/watchlist/watchlist-grid";
@@ -21,12 +22,9 @@ export default async function MisSeriesPage({
 }) {
   const { filtro } = await searchParams;
   const currentFilter = isWatchlistStatus(filtro) ? filtro : undefined;
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const claims = await getAuthClaims();
 
-  if (!user) {
+  if (!claims) {
     return (
       <>
         <Header />
@@ -41,10 +39,11 @@ export default async function MisSeriesPage({
     );
   }
 
+  const supabase = await createClient();
   const { data: allItems } = await supabase
     .from("watchlist")
     .select("*")
-    .eq("user_id", user.id)
+    .eq("user_id", claims.sub)
     .order("added_at", { ascending: false });
 
   const allWatchlist = (allItems ?? []) as WatchlistItem[];
