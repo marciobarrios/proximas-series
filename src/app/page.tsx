@@ -7,17 +7,16 @@ import { Header } from "@/components/layout/header";
 import { UpcomingReleases } from "@/components/watchlist/upcoming-releases";
 import type { UpcomingRelease, WatchlistItem } from "@/lib/types";
 
-export const dynamic = "force-dynamic";
-
 export const metadata: Metadata = {
   title: "Tendencias",
   description: "Las series más populares de la semana",
 };
 
 export default async function Home() {
+  const trendingPromise = getTrending();
   const supabase = await createClient();
   const [trending, authResult] = await Promise.all([
-    getTrending(),
+    trendingPromise,
     supabase.auth.getUser(),
   ]);
 

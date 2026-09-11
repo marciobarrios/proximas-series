@@ -5,6 +5,7 @@ import type {
   TMDBSearchResponse,
   TMDBSeasonDetail,
   TMDBShowDetail,
+  TMDBShowRelease,
   TMDBTrendingResponse,
 } from "./types";
 
@@ -54,6 +55,18 @@ export const getShowDetail = cache(
       {
         append_to_response: "credits,recommendations,similar",
       },
+      {
+        revalidate: SHOW_DETAIL_REVALIDATE_SECONDS,
+      }
+    );
+  }
+);
+
+export const getShowRelease = cache(
+  async (id: number): Promise<TMDBShowRelease> => {
+    return tmdbFetch<TMDBShowRelease>(
+      `/tv/${id}`,
+      {},
       {
         revalidate: SHOW_DETAIL_REVALIDATE_SECONDS,
       }
