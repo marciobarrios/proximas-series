@@ -25,7 +25,7 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  // Refresh the session — this keeps the auth cookie alive
+  // Validate the JWT locally and refresh it only when it is close to expiring.
   await supabase.auth.getClaims();
 
   return supabaseResponse;
@@ -33,6 +33,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!api/tmdb|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
   ],
 };

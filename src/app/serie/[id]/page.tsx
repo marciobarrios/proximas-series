@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { notFound } from "next/navigation";
+import { getAuthClaims } from "@/lib/auth";
 import { getSeasonDetail, getShowDetail } from "@/lib/tmdb";
 import { createClient } from "@/lib/supabase/server";
 import { tmdbImage, tmdbBackdrop, getYearRange } from "@/lib/constants";
@@ -160,6 +161,7 @@ export default async function ShowDetailPage({
 
   if (isNaN(numId)) notFound();
 
+  const authClaimsPromise = getAuthClaims();
   let show;
   try {
     show = await getShowDetail(numId);
@@ -168,18 +170,16 @@ export default async function ShowDetailPage({
   }
 
   // Check if user has this show in their watchlist
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const claims = await authClaimsPromise;
 
   let isInWatchlist = false;
   let currentStatus: WatchlistStatus = "pending";
-  if (user) {
+  if (claims) {
+    const supabase = await createClient();
     const { data } = await supabase
       .from("watchlist")
       .select("id, status")
-      .eq("user_id", user.id)
+      .eq("user_id", claims.sub)
       .eq("tmdb_id", numId)
       .maybeSingle();
     isInWatchlist = !!data;
@@ -281,7 +281,7 @@ export default async function ShowDetailPage({
             <AddToWatchlistButton
               show={show}
               isInWatchlist={isInWatchlist}
-              isAuthenticated={!!user}
+              isAuthenticated={!!claims}
               currentStatus={currentStatus}
             />
 
