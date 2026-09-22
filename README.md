@@ -57,6 +57,34 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
+## Public-page caching
+
+Show pages (`/serie/[id]`) use on-demand ISR: the first visit generates the
+public HTML, then requests share it for one hour. TMDB responses retain their
+six-hour data cache. Personal watchlist status loads in the browser with a
+user-specific SWR key and Supabase's existing row-level security. Mutations
+still authenticate on the server, refresh the browser's watchlist query, and
+invalidate `/mis-series` without evicting public show HTML.
+
+Only `/` and `/mis-series` need the authentication proxy for server rendering.
+Keeping it off public show pages also avoids a function invocation on cache hits.
+
+To verify caching, run a production server (`pnpm build` then `pnpm start`) and:
+
+```bash
+pnpm test:cache
+# Against a deployment, or to select another existing TMDB show:
+BASE_URL=https://proximas-series.vercel.app SHOW_ID=37636 pnpm test:cache
+```
+
+The check warms a show URL, then requires cache hits for GET, HEAD, and a request
+with an invalid test-session cookie. It also checks that cached responses never
+set cookies. `next dev` intentionally bypasses this cache and cannot pass it.
+
+After deploying, compare `/serie/[id]` function invocations and active CPU in
+Vercel Observability over equivalent traffic windows. First visits and hourly
+revalidations still use compute; existing usage totals are not reset by a deploy.
+
 ## Project Structure
 
 ```

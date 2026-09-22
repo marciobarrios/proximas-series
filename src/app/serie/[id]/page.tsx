@@ -2,21 +2,25 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { notFound } from "next/navigation";
-import { getAuthClaims } from "@/lib/auth";
 import { getSeasonDetail, getShowDetail } from "@/lib/tmdb";
-import { createClient } from "@/lib/supabase/server";
 import { tmdbImage, tmdbBackdrop, getYearRange } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
-import { AddToWatchlistButton } from "@/components/watchlist/add-to-watchlist-button";
+import { ShowWatchlistControl } from "@/components/watchlist/show-watchlist-control";
 import { ShowCard } from "@/components/shows/show-card";
 import {
-  isWatchlistStatus,
   type TMDBEpisode,
   type TMDBSeasonDetail,
   type TMDBShowDetail,
-  type WatchlistStatus,
 } from "@/lib/types";
+
+// Personal watchlist state loads in the browser, leaving public HTML and
+// metadata cacheable. Refresh date labels hourly and TMDB data every six hours.
+export const revalidate = 3600;
+
+export function generateStaticParams() {
+  return [];
+}
 
 const UPCOMING_WINDOW_DAYS = 28;
 const RECENT_FINISHED_DAYS = 30;
@@ -161,29 +165,11 @@ export default async function ShowDetailPage({
 
   if (isNaN(numId)) notFound();
 
-  const authClaimsPromise = getAuthClaims();
   let show;
   try {
     show = await getShowDetail(numId);
   } catch {
     notFound();
-  }
-
-  // Check if user has this show in their watchlist
-  const claims = await authClaimsPromise;
-
-  let isInWatchlist = false;
-  let currentStatus: WatchlistStatus = "pending";
-  if (claims) {
-    const supabase = await createClient();
-    const { data } = await supabase
-      .from("watchlist")
-      .select("id, status")
-      .eq("user_id", claims.sub)
-      .eq("tmdb_id", numId)
-      .maybeSingle();
-    isInWatchlist = !!data;
-    if (isWatchlistStatus(data?.status)) currentStatus = data.status;
   }
 
   const posterUrl = tmdbImage(show.poster_path, "w500");
@@ -278,11 +264,16 @@ export default async function ShowDetailPage({
               </div>
             </div>
 
-            <AddToWatchlistButton
-              show={show}
-              isInWatchlist={isInWatchlist}
-              isAuthenticated={!!claims}
-              currentStatus={currentStatus}
+            <ShowWatchlistControl
+              show={{
+                id: show.id,
+                name: show.name,
+                poster_path: show.poster_path,
+                overview: show.overview,
+                first_air_date: show.first_air_date,
+                vote_average: show.vote_average,
+                number_of_seasons: show.number_of_seasons,
+              }}
             />
 
             {show.genres.length > 0 && (

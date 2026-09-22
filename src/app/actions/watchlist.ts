@@ -77,7 +77,6 @@ export async function addToWatchlist(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/mis-series");
-  revalidatePath(`/serie/${tmdb_id}`);
 }
 
 export async function removeFromWatchlist(formData: FormData) {
@@ -94,7 +93,6 @@ export async function removeFromWatchlist(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/mis-series");
-  revalidatePath(`/serie/${tmdb_id}`);
 }
 
 export async function updateStatus(formData: FormData) {
@@ -116,5 +114,4 @@ export async function updateStatus(formData: FormData) {
   if (error) throw new Error(error.message);
 
   revalidatePath("/mis-series");
-  revalidatePath(`/serie/${tmdb_id}`);
 }
