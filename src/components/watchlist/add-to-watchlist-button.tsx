@@ -40,11 +40,18 @@ const statusOptions = [
   { status: "seen" as const, icon: Eye, label: "Vista" },
 ];
 
+export type WatchlistShow = Pick<
+  TMDBShowDetail,
+  "id" | "name" | "poster_path" | "overview" | "first_air_date" |
+  "vote_average" | "number_of_seasons"
+>;
+
 interface Props {
-  show: TMDBShowDetail;
+  show: WatchlistShow;
   isInWatchlist: boolean;
   isAuthenticated: boolean;
   currentStatus?: WatchlistStatus;
+  onUpdated: () => Promise<unknown>;
 }
 
 export function AddToWatchlistButton({
@@ -52,6 +59,7 @@ export function AddToWatchlistButton({
   isInWatchlist,
   isAuthenticated,
   currentStatus = "pending",
+  onUpdated,
 }: Props) {
   const [optimisticInList, setOptimisticInList] = useOptimistic(isInWatchlist);
   const [optimisticStatus, setOptimisticStatus] = useOptimistic(currentStatus);
@@ -85,6 +93,7 @@ export function AddToWatchlistButton({
       fd.set("number_of_seasons", String(show.number_of_seasons ?? ""));
 
       await addToWatchlist(fd);
+      await onUpdated();
     });
   }
 
@@ -95,6 +104,7 @@ export function AddToWatchlistButton({
       fd.set("tmdb_id", String(show.id));
       fd.set("status", newStatus);
       await updateStatus(fd);
+      await onUpdated();
     });
   }
 
@@ -105,6 +115,7 @@ export function AddToWatchlistButton({
       const fd = new FormData();
       fd.set("tmdb_id", String(show.id));
       await removeFromWatchlist(fd);
+      await onUpdated();
     });
   }
 

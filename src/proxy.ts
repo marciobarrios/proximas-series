@@ -32,7 +32,7 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: [
-    "/((?!api(?:/|$)|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  // Only these pages read auth cookies while rendering. Public show pages use
+  // the browser client; their Server Actions verify and refresh auth themselves.
+  matcher: ["/", "/mis-series/:path*"],
 };
