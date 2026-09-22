@@ -8,9 +8,11 @@ const url = new URL(`/serie/${showId}`, base);
 async function request(options) {
   const response = await fetch(url, {
     ...options,
+    redirect: "manual", // Do not accidentally test a preview's Vercel login page.
     signal: AbortSignal.timeout(30_000),
   });
-  assert.equal(response.status, 200, "The test show must exist");
+  assert.equal(response.status, 200,
+    "The show must exist and be accessible without a login redirect");
   await response.arrayBuffer();
   return response;
 }
