@@ -13,7 +13,7 @@ export function EmptyWatchlist() {
         Busca series y anadilas a tu lista para llevar un control de lo que
         quieres ver.
       </p>
-      <Button render={<Link href="/" />} className="mt-6" size="sm">
+      <Button render={<Link href="/" prefetch={false} />} className="mt-6" size="sm">
         Explorar series
       </Button>
     </div>

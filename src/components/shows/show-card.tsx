@@ -12,6 +12,7 @@ export function ShowCard({ show }: { show: TMDBShow }) {
   return (
     <Link
       href={`/serie/${show.id}`}
+      prefetch={false}
       className="group relative flex flex-col overflow-hidden rounded-lg bg-card transition-transform duration-200 ease-out hover:scale-[1.02] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-muted">

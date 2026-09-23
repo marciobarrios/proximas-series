@@ -61,6 +61,7 @@ export function WatchlistCard({ item }: { item: WatchlistItem }) {
     >
       <Link
         href={`/serie/${item.tmdb_id}`}
+        prefetch={false}
         className="relative aspect-[2/3] w-full overflow-hidden rounded-lg bg-muted"
       >
         {posterUrl ? (

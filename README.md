@@ -77,9 +77,32 @@ pnpm test:cache
 BASE_URL=https://proximas-series.vercel.app SHOW_ID=37636 pnpm test:cache
 ```
 
-The check warms a show URL, then requires cache hits for GET, HEAD, and a request
-with an invalid test-session cookie. It also checks that cached responses never
-set cookies. `next dev` intentionally bypasses this cache and cannot pass it.
+The check warms a show URL, then requires cache hits for GET, HEAD, a request
+with an invalid test-session cookie, an RSC prefetch, and a crawler request.
+It also checks that cached responses never set cookies and that RSC requests
+receive an RSC payload. `next dev` intentionally bypasses this cache and cannot
+pass it.
+
+### Avoiding speculative work and crawler load
+
+Internal links use `prefetch={false}`: opening a page or scrolling through its
+show cards must not fetch other routes. Next.js still navigates on click, using
+the existing loading states and shared ISR cache. This trades advance loading
+for lower function usage, especially for JavaScript-enabled crawlers that would
+otherwise prefetch every visible recommendation and the personal watchlist.
+
+`/robots.txt` asks the two background crawlers observed in production logs,
+`meta-externalagent` and `SemrushBot`, not to crawl the site. Other crawlers can
+still visit public pages; API and personal watchlist URLs are excluded from
+crawling. These are advisory crawl rules, not authentication or firewall rules,
+and crawlers may take time to refresh them. Search and social-preview crawlers
+are not added to the blocked groups.
+
+To verify the resource reduction in a production browser build, open a show
+with recommendations, let it hydrate, and scroll through the cards. The Network
+panel must show no requests with `Next-Router-Prefetch: 1`. Clicking a show card
+must still load that show's details. Do not use `next dev` for this check:
+automatic prefetching is only enabled in production.
 
 After deploying, compare `/serie/[id]` function invocations and active CPU in
 Vercel Observability over equivalent traffic windows. First visits and hourly
