@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /mis-series
+
+User-agent: meta-externalagent
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /

@@ -25,6 +25,7 @@ export function WatchlistFilters({ current }: { current?: WatchlistStatus }) {
           <Link
             key={f.label}
             href={href}
+            prefetch={false}
             className={cn(
               "shrink-0 rounded-md px-3 py-1.5 text-xs font-medium transition-colors",
               isActive

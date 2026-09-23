@@ -67,6 +67,7 @@ function UpcomingReleaseCard({ release }: { release: UpcomingRelease }) {
   return (
     <Link
       href={`/serie/${release.tmdb_id}`}
+      prefetch={false}
       className="group grid w-[280px] shrink-0 grid-cols-[64px_1fr] gap-3 rounded-lg border bg-card p-2 transition-colors hover:bg-muted/50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
     >
       <div className="relative aspect-[2/3] overflow-hidden rounded-md bg-muted">

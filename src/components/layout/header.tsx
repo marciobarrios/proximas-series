@@ -29,6 +29,7 @@ export function Header({
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
+          prefetch={false}
           title="Próximas series"
           className="text-lg font-bold tracking-tight transition-opacity hover:opacity-80"
         >
@@ -39,6 +40,7 @@ export function Header({
           <SearchBar transparent={isTransparent} />
           <Link
             href="/mis-series"
+            prefetch={false}
             aria-current={isMisSeriesActive ? "page" : undefined}
             className={cn(
               "flex h-9 items-center gap-1.5 rounded-full px-2.5 text-sm font-medium transition-colors sm:px-3",
