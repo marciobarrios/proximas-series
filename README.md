@@ -87,6 +87,13 @@ It also checks that cached responses never set cookies and that RSC requests
 receive an RSC payload. `next dev` intentionally bypasses this cache and cannot
 pass it.
 
+It also warms the show, trending, and search JSON endpoints and checks GET,
+HEAD, and synthetic-session requests for JSON content, no cookies, and a
+five-minute browser cache. On Vercel it requires CDN HITs; against `next start`
+it checks the origin's daily/hourly `s-maxage` instead, because the local server
+has no CDN. Vercel consumes `s-maxage`, so a production HIT alone does not prove
+the configured lifetime; confirm that separately in Vercel request details.
+
 For a credential-free regression check, run `pnpm test:resources`. It builds
 with Webpack, starts a local production server on port 3107 (`TEST_PORT` can
 override it), replaces only TMDB and Google Fonts with fixtures, and exercises

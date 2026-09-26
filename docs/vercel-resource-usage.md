@@ -8,10 +8,11 @@ show that repeated revalidation still consumes too many resources. Extend both
 the page and data lifetimes together; a longer lifetime does not prevent writes
 for previously uncached show IDs.
 
-The implementation and verification are complete locally. Production usage
-reduction remains unverified until the change is deployed and comparable traffic
-windows are available. No production deployment or firewall change was made as
-part of this audit.
+PR #28 is deployed to production at commit `aaeecf3`. Post-merge checks confirm
+shared cache hits for public pages and JSON APIs. Production usage reduction
+remains unverified until comparable traffic windows are available. The follow-up
+adds repeatable API rollout checks; no additional deployment or firewall change
+was made during that follow-up.
 
 ## Observed cause
 
@@ -105,6 +106,61 @@ eviction, response changes, and crawler behavior determine actual usage.
    refresh or automated redeploy is needed. Web Analytics remains enabled as
    explicitly installed in the deployed version; its events are a separate meter.
 
+## Post-merge review — 26 September 2026
+
+Vercel reports production deployment
+[`dpl_HeE8epSKAUAgmJ5NHT4xm3Enr1yk`](https://vercel.com/marcio-barrios-projects/proximas-series/HeE8epSKAUAgmJ5NHT4xm3Enr1yk)
+as READY at **10:09:12 UTC**, with `proximas-series.vercel.app` assigned to the
+exact merge commit `aaeecf381c92d45b39c8dfc6c911afae2c7b5302`.
+
+Checks against that production alias confirmed:
+
+- `/serie/37636`: shared HITs for HTML, HEAD, RSC, a synthetic invalid-session
+  cookie, and a Bingbot user agent; no response set a session cookie.
+- `/api/tmdb/show/37636`, `/api/tmdb/trending`, and
+  `/api/tmdb/search?q=breaking`: initial GET MISSes became HITs. API HEAD
+  requests required their own warmup, then also returned HITs. Synthetic-cookie
+  requests reused the cache. Responses retained `public, max-age=300` and JSON
+  content types, without setting cookies.
+- `/robots.txt`: the `SERankingBacklinksBot` exclusion is present in production.
+- The production runtime error query for **10:08:26–10:13:10 UTC** returned no
+  error-level logs. This short window is not a long-term reliability result.
+
+The expanded `pnpm test:cache` now covers these API requests as well as public
+show pages. It requires edge HITs when Vercel's cache header is present; against
+a local production server it verifies the expected origin `s-maxage` instead.
+`pnpm test:resources` also runs it against the fixture-backed production server.
+
+Follow-up validation passed: `pnpm lint`, the expanded production
+`BASE_URL=https://proximas-series.vercel.app pnpm test:cache`, and
+`pnpm test:resources` with its production Webpack build and TypeScript check.
+The fixture cache now includes trending data: **2,041 bytes across three entries**.
+
+Vercel consumes `s-maxage` before sending the client response. These production
+HITs verify cache reuse, **not the exact deployed TTL**. Confirm the one-day TTL
+in dashboard request details. Dashboard browser access timed out during this
+follow-up, so that check and the production usage totals remain open.
+
+The first production log sample still contains cold show-page MISSes, including
+successive IDs at roughly 13-second intervals between 10:10:52 and 10:11:57 UTC.
+This resembles the earlier crawl pattern, but the connector output does not
+include user agents, so it cannot identify the caller. A larger TTL would not
+prevent these first-generation writes.
+
+### Decisions still awaiting evidence
+
+| Decision | Earliest useful review | Evidence required before changing it |
+| --- | --- | --- |
+| Enforce the crawler exclusion with WAF | 27 September after 10:10 UTC | Confirm `SERankingBacklinksBot` still crawls after a full day with the new robots file; scope the rule to that crawler |
+| Extend caches to 48 hours | 27–28 September after 10:10 UTC | Compare equal production-only windows and establish that repeated revalidation, rather than cold MISSes, is a material remaining cost |
+| Split the homepage into public and personal sections | After collecting route-level usage | Measure `/` function invocations and active CPU; estimate the saving against the extra authenticated request and refactor |
+| Change build/deployment policy | No change indicated | No scheduled rebuild or refresh process exists in this repository |
+
+Use **27 September 10:10 UTC** for the first complete 24-hour post-deploy window,
+or **28 September 10:10 UTC** for 48 hours. Preserve the corresponding pre-deploy
+production baseline and separate preview usage. Keep the 24-hour policy until
+that comparison supports a further change. No automatic follow-up was scheduled.
+
 ## Verification and rollout
 
 `pnpm test:resources` originally failed on the actual production response policy
@@ -127,10 +183,11 @@ check advanced the client date by one day and confirmed that “Hoy” changed t
 | Lint and normal production build | Passed | Does not measure deployed Vercel usage |
 | Production cache regression | Passed, including expiry and provider outage | External TMDB/Fonts use fixtures |
 | Browser date rollover | “Hoy” became “Emitido” with no request | Local fixture page |
-| New deployment and resource totals | Pending | Compare production-only 24–48-hour windows after deployment |
+| New production deployment and cache reuse | Passed on merge commit `aaeecf3` | Fresh-entry dashboard TTL still unverified |
+| Production resource totals and crawler response | Pending | Compare production-only 24–48-hour windows after deployment |
 
-Local results do not measure Vercel billing or prove CDN header handling in a new
-deployment. After deploying:
+Local results do not measure Vercel billing. Production CDN reuse was checked
+above; retain this checklist for subsequent deployments and the usage review:
 
 1. Run `BASE_URL=https://proximas-series.vercel.app pnpm test:cache`.
 2. In request details, confirm a fresh show entry has a one-day TTL, repeated
