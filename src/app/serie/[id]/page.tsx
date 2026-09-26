@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { notFound } from "next/navigation";
-import { getSeasonDetail, getShowDetail } from "@/lib/tmdb";
+import { getSeasonDetail, getShowDetail, TMDBError } from "@/lib/tmdb";
+import { parseTmdbId } from "@/lib/tmdb-id";
 import { tmdbImage, tmdbBackdrop, getYearRange } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { Header } from "@/components/layout/header";
 import { ShowWatchlistControl } from "@/components/watchlist/show-watchlist-control";
 import { ShowCard } from "@/components/shows/show-card";
+import { EpisodeStatus } from "@/components/shows/episode-status";
 import {
   type TMDBEpisode,
   type TMDBSeasonDetail,
@@ -15,8 +17,8 @@ import {
 } from "@/lib/types";
 
 // Personal watchlist state loads in the browser, leaving public HTML and
-// metadata cacheable. Refresh date labels hourly and TMDB data every six hours.
-export const revalidate = 3600;
+// metadata cacheable. Match the daily TMDB cache in lib/cache-policy.ts.
+export const revalidate = 86400;
 
 export function generateStaticParams() {
   return [];
@@ -74,13 +76,6 @@ function buildEpisodeLabel(episode: TMDBEpisode) {
   return `T${episode.season_number} E${episode.episode_number}`;
 }
 
-function getEpisodeState(airDate: string | null, todayKey: string) {
-  if (!airDate) return "Sin fecha";
-  if (airDate === todayKey) return "Hoy";
-  if (airDate > todayKey) return "Próximo";
-  return "Emitido";
-}
-
 function getReleaseContext(show: TMDBShowDetail, today = new Date()) {
   const todayKey = toDateKey(today);
   const upcomingEndKey = toDateKey(addDays(today, UPCOMING_WINDOW_DAYS));
@@ -126,8 +121,8 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const numId = parseInt(id, 10);
-  if (isNaN(numId)) return {};
+  const numId = parseTmdbId(id);
+  if (numId === null) return {};
 
   try {
     const show = await getShowDetail(numId);
@@ -150,8 +145,9 @@ export async function generateMetadata({
         images,
       },
     };
-  } catch {
-    return {};
+  } catch (error) {
+    if (error instanceof TMDBError && error.status === 404) return {};
+    throw error;
   }
 }
 
@@ -161,15 +157,17 @@ export default async function ShowDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const numId = parseInt(id, 10);
+  const numId = parseTmdbId(id);
 
-  if (isNaN(numId)) notFound();
+  if (numId === null) notFound();
 
   let show;
   try {
     show = await getShowDetail(numId);
-  } catch {
-    notFound();
+  } catch (error) {
+    if (error instanceof TMDBError && error.status === 404) notFound();
+    // Let ISR retain the last good page on rate limits and provider outages.
+    throw error;
   }
 
   const posterUrl = tmdbImage(show.poster_path, "w500");
@@ -188,8 +186,8 @@ export default async function ShowDetailPage({
         numId,
         releaseContext.seasonNumberForDates
       );
-    } catch {
-      releaseSeason = null;
+    } catch (error) {
+      if (!(error instanceof TMDBError && error.status === 404)) throw error;
     }
   }
 
@@ -470,39 +468,33 @@ function ReleaseCalendar({
 
       {datedEpisodes.length > 0 && (
         <ol className="mt-4 grid gap-2 sm:grid-cols-2">
-          {datedEpisodes.map((episode) => {
-            const episodeState = getEpisodeState(episode.air_date, todayKey);
-
-            return (
-              <li
-                key={episode.id}
-                className="grid grid-cols-[7rem_1fr] gap-3 rounded-lg bg-muted/40 p-3"
+          {datedEpisodes.map((episode) => (
+            <li
+              key={episode.id}
+              className="grid grid-cols-[7rem_1fr] gap-3 rounded-lg bg-muted/40 p-3"
+            >
+              <time
+                dateTime={episode.air_date}
+                className="text-xs font-medium text-muted-foreground"
               >
-                <time
-                  dateTime={episode.air_date}
-                  className="text-xs font-medium text-muted-foreground"
-                >
-                  {formatDate(episode.air_date)}
-                </time>
-                <div className="min-w-0">
-                  <div className="flex min-w-0 items-center gap-2">
-                    <span className="shrink-0 text-xs font-medium">
-                      {buildEpisodeLabel(episode)}
-                    </span>
-                    <Badge
-                      variant={episodeState === "Hoy" ? "default" : "outline"}
-                      className="h-4 px-1.5 text-[10px]"
-                    >
-                      {episodeState}
-                    </Badge>
-                  </div>
-                  <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
-                    {episode.name || "Episodio sin título"}
-                  </p>
+                {formatDate(episode.air_date)}
+              </time>
+              <div className="min-w-0">
+                <div className="flex min-w-0 items-center gap-2">
+                  <span className="shrink-0 text-xs font-medium">
+                    {buildEpisodeLabel(episode)}
+                  </span>
+                  <EpisodeStatus
+                    airDate={episode.air_date}
+                    renderedToday={todayKey}
+                  />
                 </div>
-              </li>
-            );
-          })}
+                <p className="mt-1 line-clamp-1 text-xs text-muted-foreground">
+                  {episode.name || "Episodio sin título"}
+                </p>
+              </div>
+            </li>
+          ))}
         </ol>
       )}
 

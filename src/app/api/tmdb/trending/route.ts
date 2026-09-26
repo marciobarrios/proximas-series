@@ -1,11 +1,12 @@
 import { getTrending } from "@/lib/tmdb";
+import { PUBLIC_TMDB_CACHE_CONTROL } from "@/lib/cache-policy";
 import { NextResponse } from "next/server";
 
 export async function GET() {
   const data = await getTrending();
   return NextResponse.json(data, {
     headers: {
-      "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=7200",
+      "Cache-Control": PUBLIC_TMDB_CACHE_CONTROL,
     },
   });
 }

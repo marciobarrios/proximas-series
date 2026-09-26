@@ -29,7 +29,12 @@ export function useSearch() {
       ? `/api/tmdb/search?q=${encodeURIComponent(debouncedQuery.trim())}`
       : null,
     fetcher,
-    { keepPreviousData: true }
+    {
+      keepPreviousData: true,
+      revalidateOnFocus: false,
+      revalidateOnReconnect: false,
+      dedupingInterval: 300_000,
+    }
   );
 
   const isDebouncing = query !== debouncedQuery && query.trim().length >= 2;
