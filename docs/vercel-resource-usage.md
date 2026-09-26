@@ -1,5 +1,18 @@
 # Vercel resource audit — 26 September 2026
 
+## Decision and delivery status
+
+Use **24-hour refreshes** for public show pages and persisted TMDB data. A
+**48-hour interval is an accepted fallback** if measurements after deployment
+show that repeated revalidation still consumes too many resources. Extend both
+the page and data lifetimes together; a longer lifetime does not prevent writes
+for previously uncached show IDs.
+
+The implementation and verification are complete locally. Production usage
+reduction remains unverified until the change is deployed and comparable traffic
+windows are available. No production deployment or firewall change was made as
+part of this audit.
+
 ## Observed cause
 
 The supplied 12-hour screenshot attributes roughly 9K writes and 115.6 MB of
@@ -8,8 +21,7 @@ time-based revalidations across the selected environments. Operations, bytes,
 and billed units are different measures: ISR units represent 8 KB of data.
 
 The production deployment examined was `4ee0bac` (`dpl_2CxEKfQDevZ2ZJsUwfLEWadmx7jR`).
-This checkout initially predated its prefetch/crawler improvements; it was
-fast-forwarded before making this change.
+The fix builds on that version, including its existing prefetch/crawler improvements.
 
 Direct production requests confirmed shared cache HITs for repeated public
 HTML, HEAD, and a synthetic invalid-session cookie. Request details in Vercel
@@ -108,6 +120,14 @@ fixture's detail and season cache entries totaled 1,599 bytes; this is a
 regression budget, not a measurement of production payload sizes. A browser
 check advanced the client date by one day and confirmed that “Hoy” changed to
 “Emitido” without a network request. Temporary clock overrides were restored.
+
+| Verification layer | Result | Limit |
+| --- | --- | --- |
+| Existing production | Cache HITs and crawler-triggered cold/stale requests observed | Baseline behavior, before this fix |
+| Lint and normal production build | Passed | Does not measure deployed Vercel usage |
+| Production cache regression | Passed, including expiry and provider outage | External TMDB/Fonts use fixtures |
+| Browser date rollover | “Hoy” became “Emitido” with no request | Local fixture page |
+| New deployment and resource totals | Pending | Compare production-only 24–48-hour windows after deployment |
 
 Local results do not measure Vercel billing or prove CDN header handling in a new
 deployment. After deploying:
