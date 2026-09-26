@@ -101,6 +101,12 @@ try {
   assert.match(search.headers.get("cache-control"), /s-maxage=3600/);
   assert.equal((await search.json()).results[0].name, "Cache fixture");
 
+  const rolloutCheck = spawn(process.execPath, [path.join(root, "scripts/check-public-cache.mjs")], {
+    env: { ...env, BASE_URL: base, SHOW_ID: "37636" }, stdio: "inherit",
+  });
+  assert.equal((await once(rolloutCheck, "exit"))[0], 0,
+    "The rollout check must also work against a local production origin");
+
   const files = await readdir(path.join(root, ".next/cache/fetch-cache"));
   let cacheBytes = 0;
   for (const file of files) {
