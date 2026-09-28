@@ -15,14 +15,20 @@ uncached `/serie/[id]` pages. Longer cache lifetimes do not prevent those writes
 
 Changes from this review:
 
-- Added the observed `meta-webindexer` identity to `src/app/robots.txt`. The
-  existing `meta-externalagent` exclusion names a different crawler. This source
-  change still needs deployment; robots instructions are advisory.
+- Set `User-agent: *` with `Disallow: /` in `src/app/robots.txt`, asking all
+  cooperative crawlers, including Google and Bing, to stop crawling the site.
+  The owner accepts losing search discovery to keep this personal project cheap.
+  The global policy also covers the observed `meta-webindexer` identity, which
+  was not covered by the previous `meta-externalagent` exclusion.
+- Added inherited `noindex, nofollow` page metadata. Both source changes still
+  need deployment. A crawler blocked by robots.txt cannot read this metadata;
+  existing search listings can remain. The immediate objective is lower crawl
+  traffic, not guaranteed removal from search results.
 - Saved two **unpublished Log rules** in Vercel, scoped to `/serie/` and either
   `SERankingBacklinksBot` or `meta-webindexer`. They neither block traffic nor
   reduce usage in their current state. The enforcement rollout is below.
-- Retained Google/Bing indexing. No generic bot block, paid feature, cache purge,
-  cron, or extra compute service was introduced.
+- Normal browser access remains available. No generic user-agent firewall block,
+  paid feature, cache purge, cron, or extra compute service was introduced.
 
 Usage is **not yet confirmed under control**. Historical totals will remain
 high until older usage leaves the reporting window, and fresh measurements are
@@ -99,7 +105,7 @@ function invocations, and ISR updates on the current deployment:
 | 08:05:25.428 | `/serie/12712` | `bingbot/2.0` | `2krt2-1790582725428-8097ac0395ba` |
 
 SE Ranking was still generating new pages about 46 hours after its robots
-exclusion deployed. Blocking only cooperative crawlers through robots.txt is
+exclusion deployed. Asking crawlers to stop through robots.txt alone is
 therefore insufficient. Samples establish the mechanism and callers; they do
 not establish how many historical peaks or write units each bot caused.
 
@@ -138,7 +144,8 @@ does not produce these savings.** See [WAF usage and pricing](https://vercel.com
    environment restriction is a separate production rollout.
 4. After the owner accepts the match data and preview behavior, stage Deny
    for production and have the owner publish. Verify the production blocks in
-   the dashboard and that ordinary users, search indexing and sign-in work.
+   the dashboard and that ordinary users and sign-in still work. Search crawling
+   is intentionally disallowed by the separate site-wide robots policy.
 5. Compare complete production-only windows after enforcement. If unexpected
    clients match, switch the affected rule back to Log or disable it and publish.
 
@@ -147,8 +154,36 @@ Log → traffic review → preview enforcement → production enforcement. No li
 firewall protection was disabled or enforcement published during this review.
 UA matching is a targeted reduction, not protection against a crawler changing
 its identity. The third free rule remains available if evidence warrants another
-specific crawler policy. Google/Bing remain allowed; the owner can separately
-choose to stop indexing show pages for a stricter personal-project policy.
+specific crawler policy. The site-wide robots policy asks Google/Bing to stop
+crawling as well; the targeted WAF rules address observed crawlers that may
+continue requesting pages despite that policy.
+
+## Crawling and indexing policy
+
+This personal project prioritizes lower usage over search visibility. Its
+robots.txt disallows the entire site for every crawler, with no more permissive
+agent-specific groups. Root layout metadata marks pages `noindex, nofollow`
+without adding a request-time bot check or changing their cache lifetimes.
+
+These mechanisms have different limits. robots.txt reduces requests only from
+cooperative crawlers. It is neither an access control nor a guarantee that URLs
+disappear from search: an engine can retain or discover a URL without fetching
+it. The noindex directive applies only when a crawler actually fetches the page;
+a crawler obeying `Disallow: /` cannot see it. Immediate deindexing would require
+a separate removal process and is not part of this resource-control change.
+See [Google's robots documentation](https://developers.google.com/search/docs/crawling-indexing/robots/intro)
+and [noindex documentation](https://developers.google.com/search/docs/crawling-indexing/block-indexing).
+
+After deployment, confirm `/robots.txt` serves the global exclusion, the rendered
+pages contain the robots metadata, and ordinary browser navigation works. Allow
+for crawlers refreshing their cached robots policy, then compare complete daily
+usage windows. Persistent unwanted crawling still needs the WAF rollout above.
+
+Validation after this policy change: `pnpm lint` and `pnpm test:resources` passed.
+The latter includes a production Webpack build, TypeScript, and fixture-backed
+HTTP checks for ordinary page access, daily cache reuse, API policies, and stale
+page preservation during provider failure. It does not measure crawler compliance
+or confirm deployment of the new robots policy.
 
 ## Operating budgets and acceptance criteria
 
@@ -175,9 +210,10 @@ the writes being reduced.
 
 If writes remain above budget, distinguish new-page crawling from repeated
 expiry before changing cache lifetimes. A 48-hour TTL only helps the latter.
-If desired search crawlers still generate too many pages, decide whether show
-indexing is needed before narrowing their access; a public unbounded catalog
-cannot guarantee a fixed usage ceiling under arbitrary traffic.
+If search crawlers continue fetching pages after refreshing robots.txt, inspect
+their requests and consider a targeted WAF rule. Search indexing is not required;
+a public unbounded catalog still cannot guarantee a fixed usage ceiling under
+arbitrary traffic.
 
 [Hobby documentation](https://vercel.com/docs/plans/hobby) lists the included
 resources and notes that exceeding some free limits can make a feature

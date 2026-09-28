@@ -21,6 +21,10 @@ export const metadata: Metadata = {
     template: "%s | Próximas series",
   },
   description: "Tu lista de series por ver",
+  robots: {
+    index: false,
+    follow: false,
+  },
   openGraph: {
     type: "website",
     locale: "es_ES",
