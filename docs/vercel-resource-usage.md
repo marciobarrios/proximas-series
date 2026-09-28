@@ -1,5 +1,11 @@
 # Vercel resource audit — 26 September 2026
 
+> Follow-up: the [28 September production audit](vercel-usage-2026-09-28.md)
+> confirms the one-day TTL, attributes 99.9% of team ISR writes to this project,
+> and records the remaining crawler problem, resource budgets, and unpublished
+> firewall drafts. The deployment and pending checks below describe the earlier
+> 26 September audit.
+
 ## Decision and delivery status
 
 Use **24-hour refreshes** for public show pages and persisted TMDB data. A
