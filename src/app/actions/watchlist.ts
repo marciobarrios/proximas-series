@@ -1,5 +1,6 @@
 "use server";
 
+import { requireOwner } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { isWatchlistStatus } from "@/lib/types";
@@ -23,11 +24,8 @@ async function ensureProfile(
 }
 
 async function getAuthenticatedSupabase() {
+  const claims = await requireOwner();
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getClaims();
-  const claims = data?.claims;
-
-  if (error || !claims) throw new Error("No autenticado");
 
   return { supabase, claims };
 }

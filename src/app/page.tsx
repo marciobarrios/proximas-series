@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { getTrending } from "@/lib/tmdb";
-import { getAuthClaims } from "@/lib/auth";
+import { requireOwner } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { getUpcomingReleases } from "@/lib/upcoming-releases";
 import { ShowGrid } from "@/components/shows/show-grid";
@@ -14,10 +14,8 @@ export const metadata: Metadata = {
 };
 
 export default async function Home() {
-  const [trending, claims] = await Promise.all([
-    getTrending(),
-    getAuthClaims(),
-  ]);
+  const claims = await requireOwner();
+  const trending = await getTrending();
 
   let upcomingReleases: UpcomingRelease[] = [];
 

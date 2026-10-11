@@ -27,6 +27,7 @@ export function UserMenu({ user }: { user: User }) {
   async function handleSignOut() {
     const supabase = createClient();
     await supabase.auth.signOut();
+    router.replace("/login");
     router.refresh();
   }
 

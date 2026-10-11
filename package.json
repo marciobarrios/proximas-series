@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:cache": "node scripts/check-public-cache.mjs",
+    "test:cache": "node scripts/check-private-access.mjs",
     "test:resources": "node scripts/test-resource-usage.mjs"
   },
   "dependencies": {
@@ -21,10 +21,10 @@
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
     "lucide-react": "^1.7.0",
-    "next": "16.2.2",
+    "next": "16.3.8",
     "next-themes": "^0.4.6",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
     "server-only": "^0.0.1",
     "shadcn": "^4.1.2",
     "sonner": "^2.0.7",
@@ -39,7 +39,7 @@
     "@types/react-dom": "^19",
     "babel-plugin-react-compiler": "^1.0.0",
     "eslint": "^9",
-    "eslint-config-next": "16.2.2",
+    "eslint-config-next": "16.3.8",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
