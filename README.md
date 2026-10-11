@@ -38,6 +38,7 @@ Create a `.env.local` file with:
 TMDB_API_KEY=<your-tmdb-api-key>
 NEXT_PUBLIC_SUPABASE_URL=<your-supabase-project-url>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<your-supabase-anon-key>
+OWNER_USER_ID=<your-existing-supabase-auth-user-uuid>
 ```
 
 ### Database Setup
@@ -57,92 +58,61 @@ pnpm dev
 
 Open [http://localhost:3000](http://localhost:3000).
 
-## Public-page caching
+## Owner-only access
 
-Show pages (`/serie/[id]`) use on-demand ISR: the first visit generates the
-public HTML, then requests share it for 24 hours. TMDB details, seasons, release
-lookups, and trending data also refresh after 24 hours. This is request-driven
-revalidation, not a scheduled daily job; quiet pages do no regeneration work.
-Only the fields and list lengths the app uses are persisted, with no second
-cache of the full TMDB response. Episode status badges update their date in the
-browser without a server request. Personal watchlist status loads with a
-user-specific SWR key and Supabase's existing row-level security. Mutations
-still authenticate on the server, refresh the browser's watchlist query, and
-invalidate `/mis-series` without evicting public show HTML.
+The app is private. Configure **server-only** `OWNER_USER_ID` with the UUID of
+its existing owner in Supabase Authentication → Users. Do not use an email,
+`user_metadata`, a public environment variable, or a service-role key. Missing
+or malformed configuration denies all application access (503). Google OAuth
+is retained; signing in with any other account does not grant access.
 
-Only `/` and `/mis-series` need the authentication proxy for server rendering.
-Keeping it off public show pages also avoids a function invocation on cache hits.
+`/login`, the OAuth callback, framework assets, favicon and robots are public.
+All catalog pages, metadata, APIs and watchlist actions require verified Supabase
+claims whose `sub` equals the owner UUID. Anonymous requests are rejected before
+Supabase/TMDB calls. Server entry points also authorize independently of Proxy.
+HTML and API responses use private/no-store policies; there is no public HTML
+ISR. Compact TMDB detail/season/trending data remains cached for 24 hours and
+shared by authorized requests. Searches do not persist per-query cache entries.
+Internal links still disable speculative prefetching and robots disallow crawling.
 
-To verify caching, run a production server (`pnpm build` then `pnpm start`) and:
+### Before reactivating the paused project
 
-```bash
-pnpm test:cache
-# Against a deployment, or to select another existing TMDB show:
-BASE_URL=https://proximas-series.vercel.app SHOW_ID=37636 pnpm test:cache
-```
+1. Confirm the existing owner's Auth UUID and set `OWNER_USER_ID` in each intended
+   environment. Keep both projects paused until the access controls are ready.
+2. Review Supabase's **actual** RLS policies for `watchlist` and `profiles`.
+   Browser clients access Supabase directly, so application guards alone do not
+   restrict the database API. Apply `scripts/owner-only-rls.sql` with the **same**
+   owner UUID after verifying the table names and existing owner-row policies.
+   This adds restrictive policies; it preserves existing row isolation and data.
+   Also disable new user signup in Auth while preserving the existing owner.
+3. Test the preview with the owner and another account. Verify direct REST access
+   to both tables with the other account is denied; test owner CRUD and logout.
+   The SQL has not been applied or validated against the paused database.
+4. Deploy the reviewed change, then resume only when these checks pass. Previous
+   cached/public deployments must not remain accessible through aliases or old
+   deployment URLs: verify Deployment Protection or remove their public access.
+   Do not reactivate the previous production build.
 
-The check warms a show URL, then requires cache hits for GET, HEAD, a request
-with an invalid test-session cookie, an RSC prefetch, and a crawler request.
-It also checks that cached responses never set cookies and that RSC requests
-receive an RSC payload. `next dev` intentionally bypasses this cache and cannot
-pass it.
+The application permits a valid owner JWT until it expires; revoking a session
+is not an instantaneous invalidation of already-issued tokens. Changing the
+owner UUID denies the old UUID on its next request. No credentials, auth settings,
+RLS policies or deployment settings are changed automatically by this PR.
 
-It also warms the show, trending, and search JSON endpoints and checks GET,
-HEAD, and synthetic-session requests for JSON content, no cookies, and a
-five-minute browser cache. On Vercel it requires CDN HITs; against `next start`
-it checks the origin's daily/hourly `s-maxage` instead, because the local server
-has no CDN. Vercel consumes `s-maxage`, so a production HIT alone does not prove
-the configured lifetime; confirm that separately in Vercel request details.
+### Verification
 
-For a credential-free regression check, run `pnpm test:resources`. It builds
-with Webpack, starts a local production server on port 3107 (`TEST_PORT` can
-override it), replaces only TMDB and Google Fonts with fixtures, and exercises
-the real Next.js caches. It verifies the 24-hour lifetime, cache hits, compact
-persisted payloads, shared API/page data, invalid IDs, and stale-page preservation
-during a provider outage. **It recreates and removes `.next`**, so stop any local
-dev/production server before running it. Fixture builds are removed afterward
-to avoid accidentally deploying them. `pnpm build` still uses real providers.
+`pnpm test:resources` builds production and runs on port 3107 with fake TMDB,
+Supabase and font boundaries. It checks real JWT signature verification, owner
+access, rejection of other/anonymous/forged sessions, HTML/HEAD/RSC/API denial,
+missing owner configuration, no public caching and compact persisted TMDB data.
+It recreates/removes `.next`; stop local dev servers first. No real credentials
+or production requests are required. `pnpm test:cache` is now an anonymous denial
+smoke check; optionally pass `BASE_URL` for a reviewed preview. It must fail
+against a paused project or a Vercel login page; neither proves application auth.
 
-Successful public JSON responses use the CDN: show/trending responses have a
-24-hour CDN lifetime, searches one hour, and all three have a five-minute browser
-lifetime. Search queries do not create persistent Next.js data-cache entries.
-Errors and personalized pages are not given public cache headers. Show API
-responses expose the app's compact view (eight cast members and ten items per
-recommendation list), rather than the entire provider payload.
-
-The daily interval is configured in `src/lib/cache-policy.ts` and the literal
-`revalidate` export in `src/app/serie/[id]/page.tsx`. Keep both synchronized.
-To use two days, change both to `172800` and update the regression expectations.
-Changing only the page is insufficient: a shorter data cache can lower the page
-lifetime. Data freshness is approximate under stale-while-revalidate; the first
-request after expiry can see the previous version, and outages retain old data.
-
-### Avoiding speculative work and crawler load
-
-Internal links use `prefetch={false}`: opening a page or scrolling through its
-show cards must not fetch other routes. Next.js still navigates on click, using
-the existing loading states and shared ISR cache. This trades advance loading
-for lower function usage, especially for JavaScript-enabled crawlers that would
-otherwise prefetch every visible recommendation and the personal watchlist.
-
-`/robots.txt` asks the background crawlers observed in production logs,
-`meta-externalagent`, `SemrushBot`, and `SERankingBacklinksBot`, not to crawl the site. Other crawlers can
-still visit public pages; API and personal watchlist URLs are excluded from
-crawling. These are advisory crawl rules, not authentication or firewall rules,
-and crawlers may take time to refresh them. Search and social-preview crawlers
-are not added to the blocked groups.
-
-To verify the resource reduction in a production browser build, open a show
-with recommendations, let it hydrate, and scroll through the cards. The Network
-panel must show no requests with `Next-Router-Prefetch: 1`. Clicking a show card
-must still load that show's details. Do not use `next dev` for this check:
-automatic prefetching is only enabled in production.
-
-After deploying, compare `/serie/[id]` function invocations and active CPU in
-Vercel Observability over equivalent traffic windows. First visits and daily
-revalidations still use compute; existing usage totals are not reset by a deploy.
-See [the resource audit](docs/vercel-resource-usage.md) for the production evidence,
-remaining costs, and the checks to perform after deployment.
+After activation compare dated, equal traffic windows for ISR writes, CPU,
+function invocations and origin transfer. A rejected request can still invoke
+Proxy, but cannot populate show/data caches. Existing rolling usage does not
+reset when deploying or pausing; no exact savings percentage is assumed.
 
 ## Project Structure
 

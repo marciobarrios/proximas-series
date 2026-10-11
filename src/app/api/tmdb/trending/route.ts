@@ -1,12 +1,15 @@
+import { denyUnlessOwner } from "@/lib/auth";
 import { getTrending } from "@/lib/tmdb";
-import { PUBLIC_TMDB_CACHE_CONTROL } from "@/lib/cache-policy";
+import { PRIVATE_CACHE_CONTROL } from "@/lib/owner-policy";
 import { NextResponse } from "next/server";
 
 export async function GET() {
+  const denied = await denyUnlessOwner();
+  if (denied) return denied;
   const data = await getTrending();
   return NextResponse.json(data, {
     headers: {
-      "Cache-Control": PUBLIC_TMDB_CACHE_CONTROL,
+      "Cache-Control": PRIVATE_CACHE_CONTROL,
     },
   });
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { requireOwner } from "@/lib/auth";
 import Image from "next/image";
 import { CalendarDays, Clock3 } from "lucide-react";
 import { notFound } from "next/navigation";
@@ -16,14 +17,7 @@ import {
   type TMDBShowDetail,
 } from "@/lib/types";
 
-// Personal watchlist state loads in the browser, leaving public HTML and
-// metadata cacheable. Match the daily TMDB cache in lib/cache-policy.ts.
-export const revalidate = 86400;
-
-export function generateStaticParams() {
-  return [];
-}
-
+// Auth cookies make HTML request-specific; compact TMDB data stays cached.
 const UPCOMING_WINDOW_DAYS = 28;
 const RECENT_FINISHED_DAYS = 30;
 
@@ -120,6 +114,7 @@ export async function generateMetadata({
 }: {
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
+  await requireOwner();
   const { id } = await params;
   const numId = parseTmdbId(id);
   if (numId === null) return {};
@@ -156,6 +151,7 @@ export default async function ShowDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  await requireOwner();
   const { id } = await params;
   const numId = parseTmdbId(id);
 
@@ -166,7 +162,7 @@ export default async function ShowDetailPage({
     show = await getShowDetail(numId);
   } catch (error) {
     if (error instanceof TMDBError && error.status === 404) notFound();
-    // Let ISR retain the last good page on rate limits and provider outages.
+    // Preserve the distinction between a missing show and a provider outage.
     throw error;
   }
 

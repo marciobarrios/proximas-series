@@ -1,11 +1,10 @@
 import type { Metadata } from "next";
-import { getAuthClaims } from "@/lib/auth";
+import { requireOwner } from "@/lib/auth";
 import { createClient } from "@/lib/supabase/server";
 import { Header } from "@/components/layout/header";
 import { WatchlistGrid } from "@/components/watchlist/watchlist-grid";
 import { EmptyWatchlist } from "@/components/watchlist/empty-watchlist";
 import { UpcomingReleases } from "@/components/watchlist/upcoming-releases";
-import { LoginButton } from "@/components/auth/login-button";
 import { WatchlistFilters } from "./watchlist-filters";
 import { getUpcomingReleases } from "@/lib/upcoming-releases";
 import { isWatchlistStatus, type WatchlistItem } from "@/lib/types";
@@ -22,22 +21,7 @@ export default async function MisSeriesPage({
 }) {
   const { filtro } = await searchParams;
   const currentFilter = isWatchlistStatus(filtro) ? filtro : undefined;
-  const claims = await getAuthClaims();
-
-  if (!claims) {
-    return (
-      <>
-        <Header />
-        <main className="flex flex-1 flex-col items-center justify-center px-4 py-24 text-center">
-          <h1 className="text-xl font-semibold">Inicia sesion</h1>
-          <p className="mt-2 mb-6 max-w-sm text-sm text-muted-foreground">
-            Necesitas una cuenta para guardar series en tu lista.
-          </p>
-          <LoginButton />
-        </main>
-      </>
-    );
-  }
+  const claims = await requireOwner();
 
   const supabase = await createClient();
   const { data: allItems } = await supabase
